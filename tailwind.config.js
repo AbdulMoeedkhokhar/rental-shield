@@ -10,13 +10,13 @@ module.exports = {
     extend: {
       colors: {
         brand: {
-          50: "#eef2ff",
-          500: "#6366f1",
-          900: "#312e81",
+          400: "#34D399", // Mint (for highlights)
+          500: "#10B981", // Electric Emerald (primary buttons)
+          600: "#059669", // Deep Emerald (for press states)
         },
         surface: {
-          dark: "#0f172a",
-          card: "#1e293b",
+          dark: "#090D0E", // Obsidian (main app background)
+          card: "#131B1E", // Charcoal (for login forms and cards)
         },
       },
     },

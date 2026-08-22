@@ -1,0 +1,168 @@
+import React, { useEffect } from "react";
+import { View, Text } from "react-native";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withSpring,
+  withSequence,
+  withDelay,
+  Easing,
+  runOnJS,
+} from "react-native-reanimated";
+import { ShieldCheck, Crosshair, Zap } from "lucide-react-native";
+
+interface AnimatedSplashProps {
+  onAnimationComplete: () => void;
+}
+
+export function AnimatedSplash({ onAnimationComplete }: AnimatedSplashProps) {
+  // Animation Nodes
+  const arrowTranslateX = useSharedValue(-260);
+  const arrowTranslateY = useSharedValue(-260);
+  const arrowOpacity = useSharedValue(0);
+  const arrowScale = useSharedValue(1.6);
+
+  const shockwaveScale = useSharedValue(0);
+  const shockwaveOpacity = useSharedValue(0);
+
+  const shieldScale = useSharedValue(0);
+  const shieldOpacity = useSharedValue(0);
+
+  const textTranslateY = useSharedValue(25);
+  const textOpacity = useSharedValue(0);
+
+  const badgeOpacity = useSharedValue(0);
+
+  useEffect(() => {
+    // 1. Kinetic Arrow Entry (Fast diagonal sweep to center)
+    arrowOpacity.value = withTiming(1, { duration: 150 });
+    arrowTranslateX.value = withTiming(0, {
+      duration: 550,
+      easing: Easing.bezier(0.16, 1, 0.3, 1),
+    });
+    arrowTranslateY.value = withTiming(0, {
+      duration: 550,
+      easing: Easing.bezier(0.16, 1, 0.3, 1),
+    });
+    arrowScale.value = withTiming(0.8, { duration: 550 });
+
+    // 2. Shockwave Pulse on Impact (fires at t = 550ms)
+    shockwaveScale.value = withDelay(
+      520,
+      withSequence(
+        withTiming(2.4, { duration: 450, easing: Easing.out(Easing.quad) }),
+        withTiming(0, { duration: 0 })
+      )
+    );
+    shockwaveOpacity.value = withDelay(
+      520,
+      withSequence(
+        withTiming(0.8, { duration: 100 }),
+        withTiming(0, { duration: 350 })
+      )
+    );
+
+    // 3. Shield Lock-in Snap (replaces arrow on impact)
+    arrowOpacity.value = withDelay(530, withTiming(0, { duration: 80 }));
+
+    shieldOpacity.value = withDelay(530, withTiming(1, { duration: 150 }));
+    shieldScale.value = withDelay(
+      530,
+      withSpring(1, { damping: 10, stiffness: 140 })
+    );
+
+    // 4. Staggered Text Reveal
+    textOpacity.value = withDelay(750, withTiming(1, { duration: 400 }));
+    textTranslateY.value = withDelay(
+      750,
+      withSpring(0, { damping: 14, stiffness: 100 })
+    );
+
+    // 5. Bottom Cryptographic Badge
+    badgeOpacity.value = withDelay(950, withTiming(1, { duration: 400 }));
+
+    // Finish Splash
+    const timer = setTimeout(() => {
+      onAnimationComplete();
+    }, 2800);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  const arrowStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateX: arrowTranslateX.value },
+      { translateY: arrowTranslateY.value },
+      { scale: arrowScale.value },
+      { rotate: "135deg" },
+    ],
+    opacity: arrowOpacity.value,
+  }));
+
+  const shockwaveStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: shockwaveScale.value }],
+    opacity: shockwaveOpacity.value,
+  }));
+
+  const shieldStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: shieldScale.value }],
+    opacity: shieldOpacity.value,
+  }));
+
+  const textStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: textTranslateY.value }],
+    opacity: textOpacity.value,
+  }));
+
+  const badgeStyle = useAnimatedStyle(() => ({
+    opacity: badgeOpacity.value,
+  }));
+
+  return (
+    <View className="flex-1 bg-surface-dark items-center justify-center px-6">
+      {/* Center Target & Impact Anchor */}
+      <View className="items-center justify-center relative w-32 h-32 mb-10">
+        {/* Shockwave Ring */}
+        <Animated.View
+          style={shockwaveStyle}
+          className="absolute w-32 h-32 rounded-full border-2 border-brand-400 bg-brand-500/20"
+        />
+
+        {/* Incoming Kinetic Vector */}
+        <Animated.View style={[arrowStyle, { position: "absolute" }]}>
+          <Zap size={44} color="#34D399" fill="#34D399" />
+        </Animated.View>
+
+        {/* Locked Forensic Shield */}
+        <Animated.View
+          style={shieldStyle}
+          className="w-28 h-28 rounded-3xl bg-surface-card border border-brand-500/50 items-center justify-center shadow-xl shadow-brand-500/30"
+        >
+          <ShieldCheck size={58} color="#10B981" strokeWidth={2.2} />
+        </Animated.View>
+      </View>
+
+      {/* Brand & Forensic Tagline */}
+      <Animated.View style={textStyle} className="items-center">
+        <Text className="text-3xl font-extrabold text-white tracking-tight">
+          Rental<Text className="text-brand-500">Shield</Text>
+        </Text>
+        <Text className="text-xs uppercase tracking-widest text-slate-400 mt-2 font-semibold">
+          Forensic Inspection Protocol
+        </Text>
+      </Animated.View>
+
+      {/* Status Badge */}
+<Animated.View
+  style={badgeStyle}
+  className="absolute bottom-12 flex-row items-center space-x-2 bg-surface-card border border-slate-800 px-4 py-2 rounded-full"
+>
+  <View className="w-2 h-2 rounded-full bg-brand-500 mr-2" />
+  <Text className="text-xs text-slate-400 font-medium">
+    Security Verification Active
+  </Text>
+</Animated.View>
+    </View>
+  );
+}
