@@ -1,12 +1,13 @@
 {
   "expo": {
-    "name": "RentalShield",
+    "name": "Rental Shield",
     "slug": "RentalShield",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "rentalshield",
     "userInterfaceStyle": "dark",
+    "backgroundColor": "#090D0E",
     "ios": {
       "icon": "./assets/images/icon.png",
       "supportsTablet": true,
@@ -15,7 +16,8 @@
       },
       "config": {
         "userInterfaceStyle": "dark"
-      }
+      },
+      "bundleIdentifier": "com.rentalshield.app"
     },
     "android": {
       "package": "com.rentalshield.app",

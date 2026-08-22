@@ -1,17 +1,11 @@
-import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StatusBar } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { Shield, ArrowRight, CheckCircle2 } from "lucide-react-native";
-import { AnimatedSplash } from "../components/ui/AnimatedSplash";
+import { ArrowRight, CheckCircle2 } from "lucide-react-native";
+import { BrandMark } from "../components/ui/BrandMark";
 
 export default function IndexScreen() {
   const router = useRouter();
-  const [isSplashing, setIsSplashing] = useState(true);
-
-  if (isSplashing) {
-    return <AnimatedSplash onAnimationComplete={() => setIsSplashing(false)} />;
-  }
 
   return (
     <SafeAreaView className="flex-1 bg-surface-dark justify-between px-6 py-10">
@@ -19,9 +13,8 @@ export default function IndexScreen() {
 
       {/* Top Header / Brand */}
       <View className="items-center mt-6">
-        <View className="w-16 h-16 rounded-2xl bg-surface-card border border-brand-500/30 items-center justify-center mb-4">
-          <Shield size={32} color="#10B981" />
-        </View>
+        <BrandMark size={88} />
+        <View className="h-3" />
         <Text className="text-3xl font-extrabold text-white tracking-tight text-center">
           Rental<Text className="text-brand-500">Shield</Text>
         </Text>

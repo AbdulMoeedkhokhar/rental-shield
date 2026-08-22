@@ -10,7 +10,7 @@ import Animated, {
   Easing,
   runOnJS,
 } from "react-native-reanimated";
-import { ShieldCheck, Crosshair, Zap } from "lucide-react-native";
+import { BrandFrame, BrandShield } from "../BrandMark";
 
 interface AnimatedSplashProps {
   onAnimationComplete: () => void;
@@ -18,10 +18,8 @@ interface AnimatedSplashProps {
 
 export function AnimatedSplash({ onAnimationComplete }: AnimatedSplashProps) {
   // Animation Nodes
-  const arrowTranslateX = useSharedValue(-260);
-  const arrowTranslateY = useSharedValue(-260);
-  const arrowOpacity = useSharedValue(0);
-  const arrowScale = useSharedValue(1.6);
+  const frameOpacity = useSharedValue(0);
+  const frameScale = useSharedValue(1.75);
 
   const shockwaveScale = useSharedValue(0);
   const shockwaveOpacity = useSharedValue(0);
@@ -35,17 +33,12 @@ export function AnimatedSplash({ onAnimationComplete }: AnimatedSplashProps) {
   const badgeOpacity = useSharedValue(0);
 
   useEffect(() => {
-    // 1. Kinetic Arrow Entry (Fast diagonal sweep to center)
-    arrowOpacity.value = withTiming(1, { duration: 150 });
-    arrowTranslateX.value = withTiming(0, {
-      duration: 550,
+    // 1. Viewfinder brackets converge, like a camera pulling focus.
+    frameOpacity.value = withTiming(1, { duration: 200 });
+    frameScale.value = withTiming(1, {
+      duration: 620,
       easing: Easing.bezier(0.16, 1, 0.3, 1),
     });
-    arrowTranslateY.value = withTiming(0, {
-      duration: 550,
-      easing: Easing.bezier(0.16, 1, 0.3, 1),
-    });
-    arrowScale.value = withTiming(0.8, { duration: 550 });
 
     // 2. Shockwave Pulse on Impact (fires at t = 550ms)
     shockwaveScale.value = withDelay(
@@ -63,9 +56,7 @@ export function AnimatedSplash({ onAnimationComplete }: AnimatedSplashProps) {
       )
     );
 
-    // 3. Shield Lock-in Snap (replaces arrow on impact)
-    arrowOpacity.value = withDelay(530, withTiming(0, { duration: 80 }));
-
+    // 3. Shield locks into the framed area once focus lands.
     shieldOpacity.value = withDelay(530, withTiming(1, { duration: 150 }));
     shieldScale.value = withDelay(
       530,
@@ -90,14 +81,9 @@ export function AnimatedSplash({ onAnimationComplete }: AnimatedSplashProps) {
     return () => clearTimeout(timer);
   }, []);
 
-  const arrowStyle = useAnimatedStyle(() => ({
-    transform: [
-      { translateX: arrowTranslateX.value },
-      { translateY: arrowTranslateY.value },
-      { scale: arrowScale.value },
-      { rotate: "135deg" },
-    ],
-    opacity: arrowOpacity.value,
+  const frameStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: frameScale.value }],
+    opacity: frameOpacity.value,
   }));
 
   const shockwaveStyle = useAnimatedStyle(() => ({
@@ -129,17 +115,14 @@ export function AnimatedSplash({ onAnimationComplete }: AnimatedSplashProps) {
           className="absolute w-32 h-32 rounded-full border-2 border-brand-400 bg-brand-500/20"
         />
 
-        {/* Incoming Kinetic Vector */}
-        <Animated.View style={[arrowStyle, { position: "absolute" }]}>
-          <Zap size={44} color="#34D399" fill="#34D399" />
+        {/* Converging Viewfinder */}
+        <Animated.View style={[frameStyle, { position: "absolute" }]}>
+          <BrandFrame size={128} />
         </Animated.View>
 
         {/* Locked Forensic Shield */}
-        <Animated.View
-          style={shieldStyle}
-          className="w-28 h-28 rounded-3xl bg-surface-card border border-brand-500/50 items-center justify-center shadow-xl shadow-brand-500/30"
-        >
-          <ShieldCheck size={58} color="#10B981" strokeWidth={2.2} />
+        <Animated.View style={shieldStyle} className="absolute">
+          <BrandShield size={92} />
         </Animated.View>
       </View>
 
