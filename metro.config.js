@@ -3,4 +3,7 @@ const { withNativeWind } = require("nativewind/metro");
 
 const config = getDefaultConfig(__dirname);
 
+// Drizzle migrations are .sql files imported by the migrator.
+config.resolver.sourceExts.push("sql");
+
 module.exports = withNativeWind(config, { input: "./src/global.css" });

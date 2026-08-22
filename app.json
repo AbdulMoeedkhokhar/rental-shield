@@ -47,7 +47,32 @@
       ],
       "expo-asset",
       "expo-secure-store",
-      "expo-local-authentication"
+      "expo-local-authentication",
+      "expo-sqlite",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "RentalShield uses the camera to capture time-stamped, tamper-evident photos of your rental's condition.",
+          "microphonePermission": false,
+          "recordAudioAndroid": false
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "RentalShield records where each photo was taken so your condition report can prove it documents this property.",
+          "locationAlwaysPermission": false,
+          "locationAlwaysAndWhenInUsePermission": false
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": false,
+          "savePhotosPermission": "RentalShield saves a copy of your inspection photos to your camera roll when you ask it to.",
+          "isAccessMediaLocationEnabled": false
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

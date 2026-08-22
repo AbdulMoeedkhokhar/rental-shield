@@ -10,7 +10,7 @@ import Animated, {
   Easing,
   runOnJS,
 } from "react-native-reanimated";
-import { BrandFrame, BrandShield } from "../BrandMark";
+import { BrandFrame, BrandShield } from "@/components/ui/BrandMark";
 
 interface AnimatedSplashProps {
   onAnimationComplete: () => void;

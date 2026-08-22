@@ -29,3 +29,13 @@ export function fieldErrors(error: z.ZodError): Record<string, string> {
   }
   return out;
 }
+
+export const propertySchema = z.object({
+  addressLine1: z.string().trim().min(3, "Enter the street address"),
+  addressLine2: z.string().trim(),
+  city: z.string().trim().min(1, "Enter the city"),
+  stateProvince: z.string().trim(),
+  postalCode: z.string().trim(),
+  landlordName: z.string().trim(),
+  landlordEmail: z.union([z.literal(""), z.email("Enter a valid email address")]),
+});

@@ -1,3 +1,7 @@
+// Palette is shared with src/constants/colors.ts so components and classes
+// can never drift apart. Edit the JSON, not this file.
+const palette = require("./src/constants/palette.json");
+
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
@@ -8,17 +12,7 @@ module.exports = {
   presets: [require("nativewind/preset")],
   theme: {
     extend: {
-      colors: {
-        brand: {
-          400: "#34D399", // Mint (for highlights)
-          500: "#10B981", // Electric Emerald (primary buttons)
-          600: "#059669", // Deep Emerald (for press states)
-        },
-        surface: {
-          dark: "#090D0E", // Obsidian (main app background)
-          card: "#131B1E", // Charcoal (for login forms and cards)
-        },
-      },
+      colors: palette,
     },
   },
   plugins: [],

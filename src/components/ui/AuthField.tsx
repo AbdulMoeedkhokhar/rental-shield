@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 import { Text, TextInput, TextInputProps, View } from "react-native";
 
+import { colors } from "@/constants/colors";
+
 type AuthFieldProps = TextInputProps & {
   label: string;
   icon: ReactNode;
@@ -28,7 +30,7 @@ export function AuthField({
       >
         {icon}
         <TextInput
-          placeholderTextColor="#475569"
+          placeholderTextColor={colors.ink.placeholder}
           className="flex-1 text-white ml-3"
           // Deliberately not `text-base`: that also sets lineHeight, and an
           // explicit lineHeight on a TextInput clips descenders (g, j, p) on

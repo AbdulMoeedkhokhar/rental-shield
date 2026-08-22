@@ -2,8 +2,8 @@ import { View, Text, TouchableOpacity, StatusBar } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Redirect, useRouter } from "expo-router";
 import { ArrowRight, CheckCircle2 } from "lucide-react-native";
-import { BrandMark } from "../components/ui/BrandMark";
-import { useAuthStore } from "../stores/auth";
+import { BrandMark } from "@/components/ui/BrandMark";
+import { useAuthStore } from "@/stores/auth";
 
 export default function IndexScreen() {
   const router = useRouter();

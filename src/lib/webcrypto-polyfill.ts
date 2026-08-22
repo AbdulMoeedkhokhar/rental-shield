@@ -1,15 +1,35 @@
-import "react-native-get-random-values";
 import * as Crypto from "expo-crypto";
 
 /**
- * supabase-js builds its PKCE code challenge with `crypto.subtle.digest` and
- * `TextEncoder`. React Native ships neither, and auth-js does not fail on that
- * — it warns and falls back to the `plain` challenge method, which sends the
- * verifier unhashed. Providing the one digest call it uses restores S256.
+ * Minimal WebCrypto surface, backed entirely by expo-crypto.
+ *
+ * Two things need it. supabase-js builds its PKCE code challenge with
+ * `crypto.subtle.digest` and `TextEncoder`; React Native ships neither, and
+ * auth-js does not fail on that — it warns and silently falls back to the
+ * `plain` challenge method, which sends the verifier unhashed. And lib/ids.ts
+ * needs `crypto.getRandomValues` for UUIDv7.
+ *
+ * expo-crypto rather than react-native-get-random-values because expo-crypto
+ * is an SDK module, which keeps the app runnable in Expo Go.
  *
  * Must be imported before the Supabase client is constructed.
  */
 const globals = globalThis as Record<string, any>;
+
+function defineOnCrypto(key: string, value: unknown) {
+  if (typeof globals.crypto === "undefined") globals.crypto = {};
+  if (typeof globals.crypto[key] !== "undefined") return;
+  try {
+    Object.defineProperty(globals.crypto, key, { value, configurable: true });
+  } catch {
+    // Some runtimes freeze the crypto object; replace it wholesale instead.
+    globals.crypto = { ...globals.crypto, [key]: value };
+  }
+}
+
+defineOnCrypto("getRandomValues", <T extends ArrayBufferView>(array: T): T =>
+  Crypto.getRandomValues(array as never) as unknown as T
+);
 
 if (typeof globals.TextEncoder === "undefined") {
   globals.TextEncoder = class TextEncoderPolyfill {
@@ -73,24 +93,19 @@ if (typeof globals.btoa === "undefined") {
   };
 }
 
-if (globals.crypto && typeof globals.crypto.subtle === "undefined") {
-  const subtle = {
-    digest: (
-      algorithm: string | { name: string },
-      data: BufferSource
-    ): Promise<ArrayBuffer> => {
-      const name = typeof algorithm === "string" ? algorithm : algorithm.name;
-      return Crypto.digest(name as Crypto.CryptoDigestAlgorithm, data);
-    },
-  };
-
-  try {
-    Object.defineProperty(globals.crypto, "subtle", {
-      value: subtle,
-      configurable: true,
-    });
-  } catch {
-    // Some runtimes freeze the crypto object; replace it wholesale instead.
-    globals.crypto = { ...globals.crypto, subtle };
-  }
-}
+defineOnCrypto("subtle", {
+  digest: (
+    algorithm: string | { name: string },
+    data: BufferSource
+  ): Promise<ArrayBuffer> => {
+    const name = typeof algorithm === "string" ? algorithm : algorithm.name;
+    // Native only accepts a real TypedArray; an ArrayBuffer throws.
+    const bytes =
+      data instanceof Uint8Array
+        ? data
+        : new Uint8Array(
+            ArrayBuffer.isView(data) ? data.buffer : (data as ArrayBuffer)
+          );
+    return Crypto.digest(name as Crypto.CryptoDigestAlgorithm, bytes);
+  },
+});

@@ -1,180 +1,110 @@
 import { useState } from "react";
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StatusBar,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Text, TouchableOpacity, View } from "react-native";
 import { useRouter } from "expo-router";
-import { ArrowLeft, ArrowRight, Eye, EyeOff, Lock, Mail } from "lucide-react-native";
+import { ArrowRight, Eye, EyeOff, Lock, Mail } from "lucide-react-native";
 
-import { AuthField } from "../../components/ui/AuthField";
-import { fieldErrors, signInSchema } from "../../lib/validation";
-import { useAuthStore } from "../../stores/auth";
+import { AuthField } from "@/components/ui/AuthField";
+import { AuthScreen } from "@/components/ui/AuthScreen";
+import { FormError } from "@/components/ui/FormError";
+import { PrimaryButton } from "@/components/ui/PrimaryButton";
+import { colors } from "@/constants/colors";
+import { useForm } from "@/hooks/use-form";
+import { signInSchema } from "@/lib/validation";
+import { useAuthStore } from "@/stores/auth";
 
 export default function LoginScreen() {
   const router = useRouter();
   const signIn = useAuthStore((s) => s.signIn);
-
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [formError, setFormError] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
 
-  async function handleSubmit() {
-    setFormError(null);
-    const parsed = signInSchema.safeParse({ email, password });
-    if (!parsed.success) {
-      setErrors(fieldErrors(parsed.error));
-      return;
-    }
+  const form = useForm(signInSchema, { email: "", password: "" });
 
-    setErrors({});
-    setSubmitting(true);
-    try {
-      await signIn(parsed.data.email, parsed.data.password);
+  const handleSubmit = () =>
+    form.submit(async ({ email, password }) => {
+      await signIn(email, password);
       // No navigation here: (auth)/_layout redirects once the session lands.
-    } catch (e) {
-      setFormError(e instanceof Error ? e.message : "Something went wrong.");
-    } finally {
-      setSubmitting(false);
-    }
-  }
+    });
 
   return (
-    <SafeAreaView className="flex-1 bg-surface-dark">
-      <StatusBar barStyle="light-content" />
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        className="flex-1"
-      >
-        <ScrollView
-          // justifyContent/padding must live here, not in className: RN throws
-          // if layout styles are applied to the ScrollView itself.
-          contentContainerStyle={{
-            flexGrow: 1,
-            justifyContent: "space-between",
-            paddingHorizontal: 24,
-            paddingVertical: 16,
-          }}
-          keyboardShouldPersistTaps="handled"
-        >
-          <View>
-            <TouchableOpacity
-              onPress={() => router.back()}
-              className="w-10 h-10 rounded-xl bg-surface-card border border-slate-800 items-center justify-center mb-6"
-            >
-              <ArrowLeft size={20} color="#94A3B8" />
-            </TouchableOpacity>
-
-            <View className="mb-8">
-              <Text className="text-3xl font-extrabold text-white tracking-tight">
-                Welcome Back
-              </Text>
-              <Text className="text-slate-400 text-sm mt-1">
-                Sign in to access your rental condition reports.
-              </Text>
-            </View>
-
-            <View>
-              <AuthField
-                label="Email Address"
-                icon={<Mail size={18} color="#64748B" />}
-                error={errors.email}
-                value={email}
-                onChangeText={setEmail}
-                placeholder="tenant@rentalshield.io"
-                autoCapitalize="none"
-                autoComplete="email"
-                keyboardType="email-address"
-                editable={!submitting}
+    <AuthScreen
+      title="Welcome Back"
+      subtitle="Sign in to access your rental condition reports."
+      onBack={() => router.back()}
+      footer={
+        <>
+          <PrimaryButton
+            label="Authenticate"
+            onPress={handleSubmit}
+            loading={form.submitting}
+            icon={
+              <ArrowRight
+                size={18}
+                color={colors.surface.dark}
+                strokeWidth={2.5}
               />
-
-              <View className="mt-4">
-                <AuthField
-                  label="Password"
-                  icon={<Lock size={18} color="#64748B" />}
-                  error={errors.password}
-                  value={password}
-                  onChangeText={setPassword}
-                  placeholder="••••••••••••"
-                  secureTextEntry={!showPassword}
-                  autoComplete="current-password"
-                  editable={!submitting}
-                  onSubmitEditing={handleSubmit}
-                  returnKeyType="go"
-                  trailing={
-                    <TouchableOpacity
-                      onPress={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? (
-                        <EyeOff size={18} color="#64748B" />
-                      ) : (
-                        <Eye size={18} color="#64748B" />
-                      )}
-                    </TouchableOpacity>
-                  }
-                />
-              </View>
-            </View>
-
-            <TouchableOpacity
-              onPress={() => router.push("/(auth)/forgot-password")}
-              className="self-end mt-3"
-            >
+            }
+          />
+          <View className="flex-row justify-center items-center mt-4">
+            <Text className="text-slate-400 text-sm">
+              Don&apos;t have an account?{" "}
+            </Text>
+            <TouchableOpacity onPress={() => router.replace("/(auth)/signup")}>
               <Text className="text-brand-400 font-semibold text-sm">
-                Forgot password?
+                Create Account
               </Text>
             </TouchableOpacity>
-
-            {formError ? (
-              <View className="mt-5 bg-red-500/10 border border-red-500/40 rounded-xl px-4 py-3">
-                <Text className="text-red-400 text-sm">{formError}</Text>
-              </View>
-            ) : null}
           </View>
+        </>
+      }
+    >
+      <AuthField
+        label="Email Address"
+        icon={<Mail size={18} color={colors.ink.muted} />}
+        error={form.errors.email}
+        value={form.values.email}
+        onChangeText={(v) => form.setField("email", v)}
+        placeholder="tenant@rentalshield.io"
+        autoCapitalize="none"
+        autoComplete="email"
+        keyboardType="email-address"
+        editable={!form.submitting}
+      />
 
-          <View className="mt-8">
-            <TouchableOpacity
-              onPress={handleSubmit}
-              disabled={submitting}
-              activeOpacity={0.8}
-              className={`w-full bg-brand-500 py-4 rounded-xl flex-row items-center justify-center shadow-lg shadow-brand-500/20 ${
-                submitting ? "opacity-60" : ""
-              }`}
-            >
-              {submitting ? (
-                <ActivityIndicator color="#090D0E" />
+      <View className="mt-4">
+        <AuthField
+          label="Password"
+          icon={<Lock size={18} color={colors.ink.muted} />}
+          error={form.errors.password}
+          value={form.values.password}
+          onChangeText={(v) => form.setField("password", v)}
+          placeholder="••••••••••••"
+          secureTextEntry={!showPassword}
+          autoComplete="current-password"
+          editable={!form.submitting}
+          onSubmitEditing={handleSubmit}
+          returnKeyType="go"
+          trailing={
+            <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+              {showPassword ? (
+                <EyeOff size={18} color={colors.ink.muted} />
               ) : (
-                <>
-                  <Text className="text-surface-dark font-bold text-base mr-2">
-                    Authenticate
-                  </Text>
-                  <ArrowRight size={18} color="#090D0E" strokeWidth={2.5} />
-                </>
+                <Eye size={18} color={colors.ink.muted} />
               )}
             </TouchableOpacity>
+          }
+        />
+      </View>
 
-            <View className="flex-row justify-center items-center mt-4">
-              <Text className="text-slate-400 text-sm">
-                Don&apos;t have an account?{" "}
-              </Text>
-              <TouchableOpacity onPress={() => router.replace("/(auth)/signup")}>
-                <Text className="text-brand-400 font-semibold text-sm">
-                  Create Account
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+      <TouchableOpacity
+        onPress={() => router.push("/(auth)/forgot-password")}
+        className="self-end mt-3"
+      >
+        <Text className="text-brand-400 font-semibold text-sm">
+          Forgot password?
+        </Text>
+      </TouchableOpacity>
+
+      <FormError message={form.formError} />
+    </AuthScreen>
   );
 }

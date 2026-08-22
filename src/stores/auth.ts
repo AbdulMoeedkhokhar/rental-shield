@@ -1,7 +1,7 @@
 import type { Session, User } from "@supabase/supabase-js";
 import { create } from "zustand";
 
-import { resetRedirectUrl, supabase } from "../lib/supabase";
+import { resetRedirectUrl, supabase } from "@/lib/supabase";
 
 /**
  * Supabase's own error strings leak implementation detail ("Invalid login
