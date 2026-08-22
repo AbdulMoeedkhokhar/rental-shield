@@ -11,26 +11,28 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { ArrowLeft, ArrowRight, Eye, EyeOff, Lock, Mail } from "lucide-react-native";
+import { ArrowLeft, ArrowRight, Mail, MailCheck } from "lucide-react-native";
+import { z } from "zod";
 
 import { AuthField } from "../../components/ui/AuthField";
-import { fieldErrors, signInSchema } from "../../lib/validation";
+import { fieldErrors } from "../../lib/validation";
 import { useAuthStore } from "../../stores/auth";
 
-export default function LoginScreen() {
+const schema = z.object({ email: z.email("Enter a valid email address") });
+
+export default function ForgotPasswordScreen() {
   const router = useRouter();
-  const signIn = useAuthStore((s) => s.signIn);
+  const requestPasswordReset = useAuthStore((s) => s.requestPasswordReset);
 
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [sent, setSent] = useState(false);
 
   async function handleSubmit() {
     setFormError(null);
-    const parsed = signInSchema.safeParse({ email, password });
+    const parsed = schema.safeParse({ email });
     if (!parsed.success) {
       setErrors(fieldErrors(parsed.error));
       return;
@@ -39,13 +41,42 @@ export default function LoginScreen() {
     setErrors({});
     setSubmitting(true);
     try {
-      await signIn(parsed.data.email, parsed.data.password);
-      // No navigation here: (auth)/_layout redirects once the session lands.
+      await requestPasswordReset(parsed.data.email);
+      // Shown regardless of whether the address exists — telling the user
+      // otherwise would leak which emails have accounts.
+      setSent(true);
     } catch (e) {
       setFormError(e instanceof Error ? e.message : "Something went wrong.");
     } finally {
       setSubmitting(false);
     }
+  }
+
+  if (sent) {
+    return (
+      <SafeAreaView className="flex-1 bg-surface-dark px-6 justify-center items-center">
+        <StatusBar barStyle="light-content" />
+        <View className="w-16 h-16 rounded-2xl bg-surface-card border border-brand-500/40 items-center justify-center mb-5">
+          <MailCheck size={30} color="#10B981" />
+        </View>
+        <Text className="text-2xl font-extrabold text-white text-center">
+          Check your email
+        </Text>
+        <Text className="text-slate-400 text-sm text-center mt-2">
+          If an account exists for {email.trim()}, we sent a link to reset your
+          password. Open it on this device.
+        </Text>
+        <TouchableOpacity
+          onPress={() => router.replace("/(auth)/login")}
+          activeOpacity={0.8}
+          className="w-full bg-brand-500 py-4 rounded-xl items-center mt-8"
+        >
+          <Text className="text-surface-dark font-bold text-base">
+            Back to Sign In
+          </Text>
+        </TouchableOpacity>
+      </SafeAreaView>
+    );
   }
 
   return (
@@ -56,8 +87,6 @@ export default function LoginScreen() {
         className="flex-1"
       >
         <ScrollView
-          // justifyContent/padding must live here, not in className: RN throws
-          // if layout styles are applied to the ScrollView itself.
           contentContainerStyle={{
             flexGrow: 1,
             justifyContent: "space-between",
@@ -76,63 +105,27 @@ export default function LoginScreen() {
 
             <View className="mb-8">
               <Text className="text-3xl font-extrabold text-white tracking-tight">
-                Welcome Back
+                Reset Password
               </Text>
               <Text className="text-slate-400 text-sm mt-1">
-                Sign in to access your rental condition reports.
+                Enter your email and we'll send you a link to set a new one.
               </Text>
             </View>
 
-            <View>
-              <AuthField
-                label="Email Address"
-                icon={<Mail size={18} color="#64748B" />}
-                error={errors.email}
-                value={email}
-                onChangeText={setEmail}
-                placeholder="tenant@rentalshield.io"
-                autoCapitalize="none"
-                autoComplete="email"
-                keyboardType="email-address"
-                editable={!submitting}
-              />
-
-              <View className="mt-4">
-                <AuthField
-                  label="Password"
-                  icon={<Lock size={18} color="#64748B" />}
-                  error={errors.password}
-                  value={password}
-                  onChangeText={setPassword}
-                  placeholder="••••••••••••"
-                  secureTextEntry={!showPassword}
-                  autoComplete="current-password"
-                  editable={!submitting}
-                  onSubmitEditing={handleSubmit}
-                  returnKeyType="go"
-                  trailing={
-                    <TouchableOpacity
-                      onPress={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? (
-                        <EyeOff size={18} color="#64748B" />
-                      ) : (
-                        <Eye size={18} color="#64748B" />
-                      )}
-                    </TouchableOpacity>
-                  }
-                />
-              </View>
-            </View>
-
-            <TouchableOpacity
-              onPress={() => router.push("/(auth)/forgot-password")}
-              className="self-end mt-3"
-            >
-              <Text className="text-brand-400 font-semibold text-sm">
-                Forgot password?
-              </Text>
-            </TouchableOpacity>
+            <AuthField
+              label="Email Address"
+              icon={<Mail size={18} color="#64748B" />}
+              error={errors.email}
+              value={email}
+              onChangeText={setEmail}
+              placeholder="tenant@rentalshield.io"
+              autoCapitalize="none"
+              autoComplete="email"
+              keyboardType="email-address"
+              editable={!submitting}
+              onSubmitEditing={handleSubmit}
+              returnKeyType="go"
+            />
 
             {formError ? (
               <View className="mt-5 bg-red-500/10 border border-red-500/40 rounded-xl px-4 py-3">
@@ -155,23 +148,12 @@ export default function LoginScreen() {
               ) : (
                 <>
                   <Text className="text-surface-dark font-bold text-base mr-2">
-                    Authenticate
+                    Send Reset Link
                   </Text>
                   <ArrowRight size={18} color="#090D0E" strokeWidth={2.5} />
                 </>
               )}
             </TouchableOpacity>
-
-            <View className="flex-row justify-center items-center mt-4">
-              <Text className="text-slate-400 text-sm">
-                Don&apos;t have an account?{" "}
-              </Text>
-              <TouchableOpacity onPress={() => router.replace("/(auth)/signup")}>
-                <Text className="text-brand-400 font-semibold text-sm">
-                  Create Account
-                </Text>
-              </TouchableOpacity>
-            </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

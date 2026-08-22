@@ -1,11 +1,18 @@
 import { View, Text, TouchableOpacity, StatusBar } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { Redirect, useRouter } from "expo-router";
 import { ArrowRight, CheckCircle2 } from "lucide-react-native";
 import { BrandMark } from "../components/ui/BrandMark";
+import { useAuthStore } from "../stores/auth";
 
 export default function IndexScreen() {
   const router = useRouter();
+  const session = useAuthStore((s) => s.session);
+  const recovery = useAuthStore((s) => s.recovery);
+
+  // Returning users skip the marketing screen entirely.
+  if (session && !recovery) return <Redirect href="/(app)/dashboard" />;
+  if (recovery) return <Redirect href="/(auth)/reset-password" />;
 
   return (
     <SafeAreaView className="flex-1 bg-surface-dark justify-between px-6 py-10">
