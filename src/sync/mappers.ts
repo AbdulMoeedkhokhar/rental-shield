@@ -50,8 +50,12 @@ export function inspectionToRemote(row: Inspection) {
     lease_start_date: row.leaseStartDate
       ? new Date(row.leaseStartDate).toISOString().slice(0, 10)
       : null,
-    tenant_signature_url: row.tenantSignatureUrl,
-    landlord_signature_url: row.landlordSignatureUrl,
+    tenant_signature: row.tenantSignature,
+    tenant_signer_name: row.tenantSignerName,
+    tenant_signed_at: iso(row.tenantSignedAt),
+    landlord_signature: row.landlordSignature,
+    landlord_signer_name: row.landlordSignerName,
+    landlord_signed_at: iso(row.landlordSignedAt),
     completed_at: iso(row.completedAt),
     created_at: iso(row.createdAt),
     updated_at: iso(row.updatedAt),

@@ -1,16 +1,31 @@
 /**
- * Default room matrix seeded into a new inspection. Kept as data rather than a
- * table because it is app-versioned, not user-owned — a user's edits live in
- * inspection_rooms once seeded.
+ * Rooms seeded into a new inspection.
+ *
+ * Deliberately a small core that almost every home has. Seeding the full list
+ * meant a studio started with six rooms it would never use, which read as the
+ * user failing to document rather than the template being wrong. Anything else
+ * is one tap away in SUGGESTED_ROOMS.
  */
 export const ROOM_TEMPLATES = [
-  "Entryway",
   "Living Room",
   "Kitchen",
   "Bedroom",
   "Bathroom",
+] as const;
+
+/** Offered when adding a room. Free text is still allowed. */
+export const SUGGESTED_ROOMS = [
+  "Entryway",
   "Hallway",
+  "Dining Room",
+  "Second Bedroom",
+  "Second Bathroom",
   "Laundry",
+  "Office",
+  "Balcony",
+  "Garage",
+  "Basement",
+  "Storage",
   "Exterior",
 ] as const;
 

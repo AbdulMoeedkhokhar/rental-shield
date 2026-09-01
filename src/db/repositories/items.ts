@@ -5,6 +5,7 @@ import { enqueue } from "@/db/outbox";
 import { assertCanAddPhotos } from "@/db/quota";
 import { inspectionItems, inspectionRooms, inspections } from "@/db/schema";
 import type { ConditionStatus } from "@/constants/checklist";
+import { InspectionSealedError } from "@/lib/entitlement";
 import { newId } from "@/lib/ids";
 
 export type CapturedItem = {
@@ -42,6 +43,16 @@ export async function listItems(roomId: string) {
  * Throws QuotaExceededError past the free photo cap.
  */
 export async function createItem(userId: string, input: CapturedItem) {
+  // Sealed inspections are closed to new evidence. Checked here rather than in
+  // the capture screen so every path — retry, import, deep link — is covered.
+  const [parentStatus] = await db
+    .select({ status: inspections.status })
+    .from(inspectionRooms)
+    .innerJoin(inspections, eq(inspections.id, inspectionRooms.inspectionId))
+    .where(eq(inspectionRooms.id, input.roomId))
+    .limit(1);
+  if (parentStatus?.status === "completed") throw new InspectionSealedError();
+
   await assertCanAddPhotos(userId);
 
   const now = Date.now();

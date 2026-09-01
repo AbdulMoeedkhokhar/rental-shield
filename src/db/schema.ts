@@ -56,11 +56,24 @@ export const inspections = sqliteTable(
     status: text("status").notNull().default("draft"),
     leaseStartDate: integer("lease_start_date"),
 
-    // Signatures and the report exist locally first, then remotely.
+    // Deprecated: the file-based signature approach, never written. Kept
+    // declared so migrations stay additive; drop in a dedicated cleanup.
     tenantSignatureUri: text("tenant_signature_uri"),
     tenantSignatureUrl: text("tenant_signature_url"),
     landlordSignatureUri: text("landlord_signature_uri"),
     landlordSignatureUrl: text("landlord_signature_url"),
+
+    // Signatures are stored as SVG path data, not image files: a few KB of
+    // text that syncs with the row itself, needs no storage bucket or signed
+    // URL, and scales to any resolution the PDF renders at.
+    tenantSignature: text("tenant_signature"),
+    tenantSignedAt: integer("tenant_signed_at"),
+    tenantSignerName: text("tenant_signer_name"),
+    landlordSignature: text("landlord_signature"),
+    landlordSignedAt: integer("landlord_signed_at"),
+    landlordSignerName: text("landlord_signer_name"),
+
+    // Written server-side only, after payment.
     pdfReportUrl: text("pdf_report_url"),
     reportHash: text("report_hash"),
 

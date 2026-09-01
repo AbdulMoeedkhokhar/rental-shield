@@ -27,3 +27,19 @@ export class QuotaExceededError extends Error {
 export function isQuotaError(e: unknown): e is QuotaExceededError {
   return e instanceof QuotaExceededError;
 }
+
+/**
+ * Raised when something tries to modify a sealed inspection.
+ *
+ * A signed report is a fixed claim about a moment in time. Adding evidence
+ * after the signatures would mean the thing the parties signed is not the
+ * thing that gets produced in a dispute.
+ */
+export class InspectionSealedError extends Error {
+  constructor() {
+    super(
+      "This inspection is signed and sealed. Start a new inspection to document further changes."
+    );
+    this.name = "InspectionSealedError";
+  }
+}

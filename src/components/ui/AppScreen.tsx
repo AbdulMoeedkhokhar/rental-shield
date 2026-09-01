@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ReactNode, RefObject } from "react";
 import { ScrollView, StatusBar, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ArrowLeft } from "lucide-react-native";
@@ -20,6 +20,8 @@ type AppScreenProps = {
    * its content and clips instead of scrolling.
    */
   scroll?: boolean;
+  /** Lets a screen scroll itself — e.g. to bring a validation error into view. */
+  scrollRef?: RefObject<ScrollView | null>;
 };
 
 /**
@@ -34,6 +36,7 @@ export function AppScreen({
   children,
   footer,
   scroll = false,
+  scrollRef,
 }: AppScreenProps) {
   return (
     <SafeAreaView className="flex-1 bg-surface-dark">
@@ -62,6 +65,7 @@ export function AppScreen({
 
       {scroll ? (
         <ScrollView
+          ref={scrollRef}
           style={{ flex: 1 }}
           className="px-6"
           contentContainerStyle={{ paddingBottom: 24 }}
